@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:herbgo/ai_services.dart';
 import 'package:herbgo/data_manager.dart';
 import 'package:herbgo/plant_model.dart';
-import 'package:herbgo/camera_screen.dart'; // Import your new camera screen
+import 'package:herbgo/camera_screen.dart';
+import 'package:herbgo/plant_gallery.dart'; // Add this import
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
@@ -212,6 +213,8 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
 
       if (result != null) {
         await _dataManager.addPlantIdentification(result, _learningData!);
+        // Reload learning data to reflect changes
+        await _loadLearningData();
 
         setState(() {
           _identifiedPlant = result;
@@ -364,6 +367,18 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
     });
   }
 
+  void _openGallery() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlantGalleryScreen(),
+      ),
+    ).then((_) {
+      // Refresh learning data when returning from gallery
+      _loadLearningData();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -371,6 +386,13 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
         title: Text('Herbal Plant Identifier'),
         backgroundColor: Colors.green[700],
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: _openGallery,
+            icon: Icon(Icons.photo_library),
+            tooltip: 'View Plant Gallery',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -414,17 +436,37 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
             ),
             SizedBox(height: 20),
             
-            ElevatedButton.icon(
-              onPressed: _pickImages,
-              icon: Icon(Icons.add_a_photo),
-              label: Text('Capture or Select Images'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[600],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 2,
-              ),
+            // Action Buttons Row
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _pickImages,
+                    icon: Icon(Icons.add_a_photo),
+                    label: Text('Capture Images'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[600],
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _openGallery,
+                  icon: Icon(Icons.collections),
+                  label: Text('Gallery'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[600],
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 2,
+                  ),
+                ),
+              ],
             ),
             
             if (_selectedImages.isNotEmpty) ...[
@@ -573,14 +615,26 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.analytics, color: Colors.blue[600], size: 24),
-                          SizedBox(width: 8),
-                          Text(
-                            'Learning Progress',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue[800],
+                          Row(
+                            children: [
+                              Icon(Icons.analytics, color: Colors.blue[600], size: 24),
+                              SizedBox(width: 8),
+                              Text(
+                                'Learning Progress',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[800],
+                                ),
+                              ),
+                            ],
+                          ),
+                          TextButton(
+                            onPressed: _openGallery,
+                            child: Text('View All'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.blue[600],
                             ),
                           ),
                         ],
