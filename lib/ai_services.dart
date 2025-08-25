@@ -42,7 +42,7 @@ Please respond in the following JSON format:
   "commonName": "Common name of the plant",
   "scientificName": "Scientific name (Genus species)",
   "description": "Brief description of the plant and its characteristics",
-  "preparation": "How to prepare this plant for herbal use (if herbal), or 'Not applicable' if non-herbal",
+  "preparation": "How to prepare this plant for herbal use on a step by step basis (if herbal), or 'Not applicable' if non-herbal",
   "confidence": 0.0-1.0
 }
 
