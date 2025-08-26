@@ -70,84 +70,107 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
     }
   }
 
-  Future<void> _deletePlant(PlantData plant) async {
-    bool? confirmDelete = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          title: Row(
-            children: [
-              Icon(Icons.delete_outline, color: Colors.red),
-              SizedBox(width: 8),
-              Expanded(child: Text('Delete Plant')),
-            ],
-          ),
-          content: Text(
-            'Are you sure you want to delete "${plant.commonName}" from your collection?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: Text('Delete'),
-            ),
+Future<void> _deletePlant(PlantData plant) async {
+  bool? confirmDelete = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.delete_outline, color: Colors.red),
+            SizedBox(width: 8),
+            Expanded(child: Text('Delete Plant')),
           ],
-        );
-      },
-    );
+        ),
+        content: Text(
+          'Are you sure you want to delete "${plant.commonName}" from your collection? This will also remove all associated images.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('Delete'),
+          ),
+        ],
+      );
+    },
+  );
 
-    if (confirmDelete == true) {
-      try {
-        LearningData learningData = await _dataManager.loadLearningData();
-        learningData.identifiedPlants.removeWhere((p) => p.id == plant.id);
-        
-        // Also remove from frequency map
-        String plantKey = '${plant.commonName}_${plant.scientificName}';
-        if (learningData.plantFrequency.containsKey(plantKey)) {
-          if (learningData.plantFrequency[plantKey]! <= 1) {
-            learningData.plantFrequency.remove(plantKey);
-          } else {
-            learningData.plantFrequency[plantKey] = learningData.plantFrequency[plantKey]! - 1;
+  if (confirmDelete == true) {
+    try {
+      LearningData learningData = await _dataManager.loadLearningData();
+      
+      // Remove plant from the database
+      learningData.identifiedPlants.removeWhere((p) => p.id == plant.id);
+      
+      // Update frequency map - decrement the count for this species
+      String plantKey = '${plant.commonName}_${plant.scientificName}';
+      if (learningData.plantFrequency.containsKey(plantKey)) {
+        if (learningData.plantFrequency[plantKey]! <= 1) {
+          // This was the last plant of this species, remove the entry entirely
+          learningData.plantFrequency.remove(plantKey);
+          print('Removed species entirely from frequency map: $plantKey');
+        } else {
+          // Decrement the count as there are other plants of this species
+          learningData.plantFrequency[plantKey] = learningData.plantFrequency[plantKey]! - 1;
+          print('Decremented frequency count for $plantKey to ${learningData.plantFrequency[plantKey]}');
+        }
+      } else {
+        print('Warning: Plant key $plantKey not found in frequency map');
+      }
+      
+      // DELETE THE PHYSICAL IMAGE FILES - ADD THIS SECTION
+      for (String imagePath in plant.imagePaths) {
+        try {
+          File imageFile = File(imagePath);
+          if (await imageFile.exists()) {
+            await imageFile.delete();
+            print('Deleted image file: $imagePath');
           }
+        } catch (e) {
+          print('Error deleting image file $imagePath: $e');
+          // Continue with other files even if one fails
         }
-        
-        await _dataManager.saveLearningData(learningData);
-        await _loadPlants();
+      }
+      
+      // Save the updated learning data
+      await _dataManager.saveLearningData(learningData);
+      await _loadPlants();
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.check, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text('Plant deleted successfully'),
-                ],
-              ),
-              backgroundColor: Colors.green[600],
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Plant and images deleted successfully'),
+              ],
             ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting plant: $e'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+            backgroundColor: Colors.green[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting plant: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
+}
 
   void _showPlantDetails(PlantData plant) {
     Navigator.push(

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:herbgo/plant_model.dart';
 
@@ -10,7 +9,7 @@ class PlantAIService {
   final String _apiKey;
 
   PlantAIService(this._apiKey) {
-    _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
+    _model = GenerativeModel(model: 'gemini-2.0-flash-lite', apiKey: _apiKey);
   }
 
   Future<PlantData?> identifyPlant(
@@ -52,7 +51,7 @@ Please respond in the following JSON format:
   "isPlant": true/false,
   "reason": "Brief explanation if not a plant, or empty string if it is a plant",
   "isHerbal": true/false,
-  "commonName": "Common name of the plant in the Philippines (only if isPlant is true)",
+  "commonName": "Common Filipino name of the plant (only if isPlant is true)",
   "scientificName": "Scientific name (Genus species) (only if isPlant is true)",
   "description": "Brief description of the plant and its characteristics (only if isPlant is true)",
   "preparation": "Step-by-step preparation for herbal use, or 'Not applicable' if non-herbal (only if isPlant is true)",
@@ -64,7 +63,7 @@ IMPORTANT VALIDATION RULES:
 - Only proceed with plant identification if you're confident the image contains actual botanical specimens
 - Be conservative: if uncertain whether it's a plant, mark as "isPlant": false
 - For plant identification, focus on:
-  1. Accurate visual plant characteristics (leaves, stems, flowers, etc.)
+  1. Accurate visual plant characteristics (color, leaves, stems, flowers, etc.)
   2. Compare with reference images if available
   3. Whether it has documented medicinal/herbal uses in the Philippines
   4. Safe preparation methods if applicable
