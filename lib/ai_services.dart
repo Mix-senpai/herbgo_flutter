@@ -35,31 +35,41 @@ class PlantAIService {
       String prompt = '''
 $learningContext
 
-Analyze the provided plant images and determine if this is a herbal plant with medicinal properties.
+CRITICAL INSTRUCTIONS:
+1. ONLY analyze if the images contain actual living plants, herbs, or botanical specimens
+2. DO NOT identify non-plant objects like rocks, animals, people, food items, manufactured objects, etc.
+3. If the images do not contain plants, respond with: {"isPlant": false, "reason": "No plant detected"}
+
+If the images DO contain plants, analyze them to determine if they are herbal plants with medicinal properties.
 
 User notes: ${userNotes ?? 'None provided'}
 
-The first ${images.length} images are the current plant to identify.
+The first ${images.length} images are the current specimens to identify.
 ${referenceImageParts.isNotEmpty ? 'The following images are reference examples from previous identifications for learning context.' : ''}
 
 Please respond in the following JSON format:
 {
+  "isPlant": true/false,
+  "reason": "Brief explanation if not a plant, or empty string if it is a plant",
   "isHerbal": true/false,
-  "commonName": "Common name of the plant in the Philippines.",
-  "scientificName": "Scientific name (Genus species)",
-  "description": "Brief description of the plant and its characteristics",
-  "preparation": "How to prepare this plant for herbal use on a step by step basis (if herbal), or 'Not applicable' if non-herbal",
+  "commonName": "Common name of the plant in the Philippines (only if isPlant is true)",
+  "scientificName": "Scientific name (Genus species) (only if isPlant is true)",
+  "description": "Brief description of the plant and its characteristics (only if isPlant is true)",
+  "preparation": "Step-by-step preparation for herbal use, or 'Not applicable' if non-herbal (only if isPlant is true)",
   "confidence": 0.0-1.0
 }
 
-Focus on:
-1. Accurate plant identification using visual characteristics
-2. Compare with reference images if available to improve accuracy
-3. Whether it has documented medicinal/herbal uses
-4. Safe preparation methods if applicable
-5. Clear warnings if the plant might be dangerous
-
-Be conservative - if uncertain about herbal properties or safety, mark as non-herbal.
+IMPORTANT VALIDATION RULES:
+- If the image shows any non-plant object (rocks, animals, people, food, manufactured items, etc.), set "isPlant": false
+- Only proceed with plant identification if you're confident the image contains actual botanical specimens
+- Be conservative: if uncertain whether it's a plant, mark as "isPlant": false
+- For plant identification, focus on:
+  1. Accurate visual plant characteristics (leaves, stems, flowers, etc.)
+  2. Compare with reference images if available
+  3. Whether it has documented medicinal/herbal uses in the Philippines
+  4. Safe preparation methods if applicable
+- If the plant might be dangerous or you're unsure about safety, mark as non-herbal
+- Confidence should reflect both plant identification accuracy AND herbal properties certainty
 ''';
 
       final content = [
@@ -77,9 +87,26 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
         String jsonString = _extractJsonFromResponse(response.text!);
         Map<String, dynamic> plantInfo = jsonDecode(jsonString);
 
-        // Only proceed if confidence is reasonable
-        if (plantInfo['confidence'] < 0.6) {       // TODO FIX CONF LEVEL
-          return null; // Low confidence, don't identify
+        // First check if it's actually a plant
+        if (plantInfo['isPlant'] == false) {
+          print('Not a plant detected: ${plantInfo['reason']}');
+          return null; // Return null for non-plant objects
+        }
+
+        // Only proceed if confidence is reasonable for actual plants
+        if (plantInfo['confidence'] < 0.7) { // Increased threshold for better accuracy
+          print('Low confidence plant identification: ${plantInfo['confidence']}');
+          return null;
+        }
+
+        // Validate required fields for plant data
+        if (plantInfo['commonName'] == null || 
+            plantInfo['scientificName'] == null ||
+            plantInfo['description'] == null ||
+            plantInfo['commonName'].toString().trim().isEmpty ||
+            plantInfo['scientificName'].toString().trim().isEmpty) {
+          print('Incomplete plant identification data');
+          return null;
         }
 
         return PlantData(
@@ -87,8 +114,8 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
           commonName: plantInfo['commonName'],
           scientificName: plantInfo['scientificName'],
           description: plantInfo['description'],
-          preparation: plantInfo['preparation'],
-          isHerbal: plantInfo['isHerbal'],
+          preparation: plantInfo['preparation'] ?? 'Not applicable',
+          isHerbal: plantInfo['isHerbal'] ?? false,
           imagePaths: images.map((f) => f.path).toList(),
           identifiedAt: DateTime.now(),
           userNotes: userNotes,
