@@ -19,15 +19,18 @@ class PlantAIService {
     LearningData learningData,
   ) async {
     try {
-      // Prepare context from learning data
-      String learningContext = _buildLearningContext(learningData);
+      // Prepare context from learning data (including images)
+      String learningContext = await _buildLearningContext(learningData);
 
-      // Convert images to bytes
+      // Convert current images to bytes
       List<DataPart> imageParts = [];
       for (File image in images) {
         Uint8List imageBytes = await image.readAsBytes();
         imageParts.add(DataPart('image/jpeg', imageBytes));
       }
+
+      // Add reference images from learning data
+      List<DataPart> referenceImageParts = await _buildReferenceImages(learningData);
 
       String prompt = '''
 $learningContext
@@ -36,10 +39,13 @@ Analyze the provided plant images and determine if this is a herbal plant with m
 
 User notes: ${userNotes ?? 'None provided'}
 
+The first ${images.length} images are the current plant to identify.
+${referenceImageParts.isNotEmpty ? 'The following images are reference examples from previous identifications for learning context.' : ''}
+
 Please respond in the following JSON format:
 {
   "isHerbal": true/false,
-  "commonName": "Common name of the plant",
+  "commonName": "Common name of the plant in the Philippines.",
   "scientificName": "Scientific name (Genus species)",
   "description": "Brief description of the plant and its characteristics",
   "preparation": "How to prepare this plant for herbal use on a step by step basis (if herbal), or 'Not applicable' if non-herbal",
@@ -47,16 +53,21 @@ Please respond in the following JSON format:
 }
 
 Focus on:
-1. Accurate plant identification
-2. Whether it has documented medicinal/herbal uses
-3. Safe preparation methods if applicable
-4. Clear warnings if the plant might be dangerous
+1. Accurate plant identification using visual characteristics
+2. Compare with reference images if available to improve accuracy
+3. Whether it has documented medicinal/herbal uses
+4. Safe preparation methods if applicable
+5. Clear warnings if the plant might be dangerous
 
 Be conservative - if uncertain about herbal properties or safety, mark as non-herbal.
 ''';
 
       final content = [
-        Content.multi([TextPart(prompt), ...imageParts]),
+        Content.multi([
+          TextPart(prompt), 
+          ...imageParts,
+          ...referenceImageParts,
+        ]),
       ];
 
       final response = await _model.generateContent(content);
@@ -67,7 +78,7 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
         Map<String, dynamic> plantInfo = jsonDecode(jsonString);
 
         // Only proceed if confidence is reasonable
-        if (plantInfo['confidence'] < 0.6) {
+        if (plantInfo['confidence'] < 0.6) {       // TODO FIX CONF LEVEL
           return null; // Low confidence, don't identify
         }
 
@@ -89,7 +100,7 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
     return null;
   }
 
-  String _buildLearningContext(LearningData learningData) {
+  Future<String> _buildLearningContext(LearningData learningData) async {
     StringBuffer context = StringBuffer();
     context.writeln('Learning Context from Previous Identifications:');
 
@@ -99,6 +110,12 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
         context.writeln(
           '- ${plant.commonName} (${plant.scientificName}): ${plant.isHerbal ? 'Herbal' : 'Non-herbal'}',
         );
+        context.writeln('  Description: ${plant.description.substring(0, plant.description.length > 100 ? 100 : plant.description.length)}...');
+        if (plant.isHerbal) {
+          context.writeln('  Preparation: ${plant.preparation.substring(0, plant.preparation.length > 80 ? 80 : plant.preparation.length)}...');
+        }
+        context.writeln('  Images available: ${plant.imagePaths.length}');
+        context.writeln('');
       }
     }
 
@@ -109,7 +126,65 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
       });
     }
 
+    // Add frequency information for better context
+    if (learningData.plantFrequency.isNotEmpty) {
+      context.writeln('Most frequently identified plant types:');
+      var sortedFrequency = learningData.plantFrequency.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      
+      for (var entry in sortedFrequency.take(5)) {
+        context.writeln('- ${entry.key}: ${entry.value} times');
+      }
+    }
+
     return context.toString();
+  }
+
+  Future<List<DataPart>> _buildReferenceImages(LearningData learningData) async {
+    List<DataPart> referenceImages = [];
+    
+    try {
+      // Get a diverse set of reference images from learning data
+      // Prioritize herbal plants and recent identifications
+      List<PlantData> referencePlants = [];
+      
+      // Add herbal plants first (more important for learning)
+      var herbalPlants = learningData.identifiedPlants
+          .where((p) => p.isHerbal && p.imagePaths.isNotEmpty)
+          .toList();
+      referencePlants.addAll(herbalPlants.take(3));
+      
+      // Add some non-herbal plants for comparison
+      var nonHerbalPlants = learningData.identifiedPlants
+          .where((p) => !p.isHerbal && p.imagePaths.isNotEmpty)
+          .toList();
+      referencePlants.addAll(nonHerbalPlants.take(2));
+      
+      // Limit total reference images to avoid overwhelming the context
+      for (var plant in referencePlants.take(5)) {
+        // Use the first image from each reference plant
+        if (plant.imagePaths.isNotEmpty) {
+          try {
+            File imageFile = File(plant.imagePaths.first);
+            if (await imageFile.exists()) {
+              Uint8List imageBytes = await imageFile.readAsBytes();
+              referenceImages.add(DataPart('image/jpeg', imageBytes));
+              
+              // Limit to prevent context overflow
+              if (referenceImages.length >= 5) break;
+            }
+          } catch (e) {
+            print('Error loading reference image for ${plant.commonName}: $e');
+            // Continue with next image if this one fails
+          }
+        }
+      }
+    } catch (e) {
+      print('Error building reference images: $e');
+      // Return empty list if there's an error
+    }
+    
+    return referenceImages;
   }
 
   String _extractJsonFromResponse(String response) {
@@ -122,5 +197,23 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
     }
 
     throw Exception('No valid JSON found in response');
+  }
+
+  // Additional method to get learning statistics
+  Map<String, dynamic> getLearningStats(LearningData learningData) {
+    return {
+      'totalPlants': learningData.identifiedPlants.length,
+      'herbalPlants': learningData.identifiedPlants.where((p) => p.isHerbal).length,
+      'uniqueSpecies': learningData.plantFrequency.length,
+      'totalImages': learningData.identifiedPlants
+          .map((p) => p.imagePaths.length)
+          .fold(0, (a, b) => a + b),
+      'userCorrections': learningData.userCorrections.length,
+      'mostCommonPlant': learningData.plantFrequency.isNotEmpty
+          ? learningData.plantFrequency.entries
+              .reduce((a, b) => a.value > b.value ? a : b)
+              .key
+          : null,
+    };
   }
 }

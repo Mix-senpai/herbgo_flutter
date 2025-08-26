@@ -80,7 +80,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
             children: [
               Icon(Icons.delete_outline, color: Colors.red),
               SizedBox(width: 8),
-              Text('Delete Plant'),
+              Expanded(child: Text('Delete Plant')),
             ],
           ),
           content: Text(
@@ -119,28 +119,32 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
         await _dataManager.saveLearningData(learningData);
         await _loadPlants();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check, color: Colors.white),
-                SizedBox(width: 8),
-                Text('Plant deleted successfully'),
-              ],
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Plant deleted successfully'),
+                ],
+              ),
+              backgroundColor: Colors.green[600],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            backgroundColor: Colors.green[600],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        );
+          );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting plant: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting plant: $e'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     }
   }
@@ -215,14 +219,17 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                     ),
                     SizedBox(width: 8),
                     Expanded(
-                      child: Row(
-                        children: [
-                          _buildFilterChip('All', 'all'),
-                          SizedBox(width: 8),
-                          _buildFilterChip('Herbal', 'herbal'),
-                          SizedBox(width: 8),
-                          _buildFilterChip('Non-Herbal', 'non-herbal'),
-                        ],
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildFilterChip('All', 'all'),
+                            SizedBox(width: 8),
+                            _buildFilterChip('Herbal', 'herbal'),
+                            SizedBox(width: 8),
+                            _buildFilterChip('Non-Herbal', 'non-herbal'),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -238,11 +245,13 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${_filteredPlants.length} plant${_filteredPlants.length != 1 ? 's' : ''} found',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
+                  Flexible(
+                    child: Text(
+                      '${_filteredPlants.length} plant${_filteredPlants.length != 1 ? 's' : ''} found',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   if (_allPlants.isNotEmpty)
@@ -284,7 +293,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                             crossAxisCount: 2,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            childAspectRatio: 0.8,
+                            childAspectRatio: 0.75, // Adjusted to prevent overflow
                           ),
                           itemCount: _filteredPlants.length,
                           itemBuilder: (context, index) {
@@ -315,6 +324,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
       checkmarkColor: Colors.white,
       elevation: isSelected ? 2 : 0,
       pressElevation: 4,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
@@ -410,24 +420,29 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                         ? Image.file(
                             File(plant.imagePaths.first),
                             width: double.infinity,
+                            height: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
                                 color: Colors.grey[200],
-                                child: Icon(
-                                  Icons.image_not_supported,
-                                  color: Colors.grey[400],
-                                  size: 40,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: Colors.grey[400],
+                                    size: 40,
+                                  ),
                                 ),
                               );
                             },
                           )
                         : Container(
                             color: Colors.grey[200],
-                            child: Icon(
-                              Icons.eco,
-                              color: Colors.grey[400],
-                              size: 40,
+                            child: Center(
+                              child: Icon(
+                                Icons.eco,
+                                color: Colors.grey[400],
+                                size: 40,
+                              ),
                             ),
                           ),
                   ),
@@ -438,21 +453,21 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.green[600],
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.healing, color: Colors.white, size: 12),
-                            SizedBox(width: 4),
+                            Icon(Icons.healing, color: Colors.white, size: 10),
+                            SizedBox(width: 3),
                             Text(
                               'Herbal',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -467,7 +482,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.black54,
                           borderRadius: BorderRadius.circular(8),
@@ -475,13 +490,13 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.photo_library, color: Colors.white, size: 10),
+                            Icon(Icons.photo_library, color: Colors.white, size: 9),
                             SizedBox(width: 2),
                             Text(
                               '${plant.imagePaths.length}',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -492,12 +507,12 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
 
                   // Delete Button
                   Positioned(
-                    bottom: 8,
-                    right: 8,
+                    bottom: 6,
+                    right: 6,
                     child: GestureDetector(
                       onTap: () => _deletePlant(plant),
                       child: Container(
-                        padding: EdgeInsets.all(6),
+                        padding: EdgeInsets.all(5),
                         decoration: BoxDecoration(
                           color: Colors.red[600],
                           shape: BoxShape.circle,
@@ -505,7 +520,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                         child: Icon(
                           Icons.delete,
                           color: Colors.white,
-                          size: 14,
+                          size: 12,
                         ),
                       ),
                     ),
@@ -514,54 +529,59 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
               ),
             ),
             
-            // Plant Info
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      plant.commonName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: Colors.grey[800],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      plant.scientificName,
-                      style: TextStyle(
-                        fontStyle: FontStyle.italic,
-                        fontSize: 11,
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Spacer(),
-                    Row(
+            // Plant Info - Fixed height to prevent overflow
+            Container(
+              height: 70, // Fixed height to prevent overflow
+              padding: EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.calendar_today, size: 12, color: Colors.grey[500]),
-                        SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            _formatDate(plant.identifiedAt),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[500],
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                        Text(
+                          plant.commonName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.grey[800],
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          plant.scientificName,
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            fontSize: 10,
+                            color: Colors.grey[600],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 10, color: Colors.grey[500]),
+                      SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          _formatDate(plant.identifiedAt),
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: Colors.grey[500],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
