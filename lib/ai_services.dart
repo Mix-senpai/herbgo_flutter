@@ -10,7 +10,7 @@ class PlantAIService {
   final String _apiKey;
 
   PlantAIService(this._apiKey) {
-    _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey);
+    _model = GenerativeModel(model: 'gemini-2.0-flash-lite', apiKey: _apiKey);
   }
 
   Future<PlantData?> identifyPlant(
@@ -47,10 +47,10 @@ Please respond in the following JSON format:
 }
 
 Focus on:
-1. Accurate plant identification
-2. Whether it has documented medicinal/herbal uses
-3. Safe preparation methods if applicable
-4. Clear warnings if the plant might be dangerous
+1. Accurate plant identification.
+2. Whether it has documented medicinal/herbal uses.
+3. Safe preparation methods if applicable, in a step-by-step numbered format.
+4. Clear warnings if the plant might be dangerous.
 
 Be conservative - if uncertain about herbal properties or safety, mark as non-herbal.
 ''';

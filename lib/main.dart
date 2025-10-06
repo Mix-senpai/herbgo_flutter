@@ -3,7 +3,7 @@ import 'package:herbgo/ai_services.dart';
 import 'package:herbgo/data_manager.dart';
 import 'package:herbgo/plant_model.dart';
 import 'package:herbgo/camera_screen.dart';
-import 'package:herbgo/plant_gallery.dart'; // Add this import
+import 'package:herbgo/plant_gallery.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
@@ -13,14 +13,14 @@ List<CameraDescription> cameras = [];
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize cameras
   try {
     cameras = await availableCameras();
   } catch (e) {
     print('Error initializing cameras: $e');
   }
-  
+
   runApp(HerbalPlantApp());
 }
 
@@ -58,8 +58,7 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
   @override
   void initState() {
     super.initState();
-    _aiService = PlantAIService(
-        "AIzaSyBW3fgT21pjhjoMW6r39Y3Ouv8VFfjzztA"); // Replace with your API key
+    _aiService = PlantAIService("AIzaSyBW3fgT21pjhjoMW6r39Y3Ouv8VFfjzztA");
     _loadLearningData();
   }
 
@@ -93,7 +92,6 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             SizedBox(height: 20),
-            
             ListTile(
               leading: Container(
                 padding: EdgeInsets.all(8),
@@ -111,7 +109,6 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                 _openCamera();
               },
             ),
-            
             ListTile(
               leading: Container(
                 padding: EdgeInsets.all(8),
@@ -129,7 +126,6 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                 _pickFromGallery();
               },
             ),
-            
             ListTile(
               leading: Container(
                 padding: EdgeInsets.all(8),
@@ -147,7 +143,6 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                 _quickCamera();
               },
             ),
-            
             SizedBox(height: 10),
           ],
         ),
@@ -190,7 +185,7 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
 
   Future<void> _pickFromGallery() async {
     final List<XFile> images = await _picker.pickMultiImage();
-    
+
     setState(() {
       _selectedImages = images.map((xFile) => File(xFile.path)).toList();
     });
@@ -401,7 +396,8 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
           children: [
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15)),
               child: Padding(
                 padding: EdgeInsets.all(20),
                 child: Column(
@@ -412,30 +408,32 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                         color: Colors.green[50],
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.local_florist, size: 48, color: Colors.green[700]),
+                      child: Icon(Icons.local_florist,
+                          size: 48, color: Colors.green[700]),
                     ),
                     SizedBox(height: 16),
                     Text(
                       'Identify Herbal Plants',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[800],
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[800],
+                              ),
                     ),
                     SizedBox(height: 8),
                     Text(
                       'Capture or select photos of plants to identify if they have herbal properties',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                            color: Colors.grey[600],
+                          ),
                     ),
                   ],
                 ),
               ),
             ),
             SizedBox(height: 20),
-            
+
             // Action Buttons Row
             Row(
               children: [
@@ -448,7 +446,8 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                       backgroundColor: Colors.green[600],
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 2,
                     ),
                   ),
@@ -462,13 +461,14 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                     backgroundColor: Colors.blue[600],
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     elevation: 2,
                   ),
                 ),
               ],
             ),
-            
+
             if (_selectedImages.isNotEmpty) ...[
               SizedBox(height: 20),
               Row(
@@ -477,8 +477,8 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                   Text(
                     'Selected Images (${_selectedImages.length})',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   TextButton.icon(
                     onPressed: _clearSelection,
@@ -536,10 +536,11 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                 ),
               ),
             ],
-            
+
             SizedBox(height: 20),
             Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -548,14 +549,15 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                     Text(
                       'Additional Notes (Optional)',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     SizedBox(height: 8),
                     TextField(
                       controller: _notesController,
                       decoration: InputDecoration(
-                        hintText: 'Any observations about the plant, location, conditions...',
+                        hintText:
+                            'Any observations about the plant, location, conditions...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -578,7 +580,7 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                 ),
               ),
             ),
-            
+
             SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _selectedImages.isNotEmpty && !_isLoading
@@ -594,21 +596,24 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                       ),
                     )
                   : Icon(Icons.search),
-              label: Text(_isLoading ? 'Identifying Plant...' : 'Identify Plant'),
+              label:
+                  Text(_isLoading ? 'Identifying Plant...' : 'Identify Plant'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green[700],
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 elevation: _selectedImages.isNotEmpty ? 4 : 1,
               ),
             ),
-            
+
             if (_learningData != null &&
                 _learningData!.identifiedPlants.isNotEmpty) ...[
               SizedBox(height: 24),
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: Padding(
                   padding: EdgeInsets.all(16),
                   child: Column(
@@ -619,14 +624,18 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.analytics, color: Colors.blue[600], size: 24),
+                              Icon(Icons.analytics,
+                                  color: Colors.blue[600], size: 24),
                               SizedBox(width: 8),
                               Text(
                                 'Learning Progress',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue[800],
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue[800],
+                                    ),
                               ),
                             ],
                           ),
@@ -670,42 +679,47 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
                           ),
                         ],
                       ),
-                      if (_learningData!.identifiedPlants.where((p) => p.isHerbal).isNotEmpty) ...[
+                      if (_learningData!.identifiedPlants
+                          .where((p) => p.isHerbal)
+                          .isNotEmpty) ...[
                         SizedBox(height: 16),
                         Text(
                           'Recent Herbal Plants:',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 14),
                         ),
                         SizedBox(height: 8),
                         ..._learningData!.identifiedPlants
                             .where((p) => p.isHerbal)
                             .take(3)
                             .map((plant) => Padding(
-                              padding: EdgeInsets.only(bottom: 4),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.local_florist, size: 16, color: Colors.green),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      plant.commonName,
-                                      style: TextStyle(fontSize: 13),
-                                    ),
+                                  padding: EdgeInsets.only(bottom: 4),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.local_florist,
+                                          size: 16, color: Colors.green),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          plant.commonName,
+                                          style: TextStyle(fontSize: 13),
+                                        ),
+                                      ),
+                                      Text(
+                                        '${DateTime.now().difference(plant.identifiedAt).inDays}d ago',
+                                        style: TextStyle(
+                                            fontSize: 11, color: Colors.grey),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    '${DateTime.now().difference(plant.identifiedAt).inDays}d ago',
-                                    style: TextStyle(fontSize: 11, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            )),
+                                )),
                       ],
                     ],
                   ),
                 ),
               ),
             ],
-            
+
             SizedBox(height: 20),
           ],
         ),
@@ -713,7 +727,8 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -776,7 +791,8 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
           children: [
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15)),
               child: Padding(
                 padding: EdgeInsets.all(20),
                 child: Column(
@@ -839,8 +855,8 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
               Text(
                 'Images',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               SizedBox(height: 8),
               Container(
@@ -871,12 +887,13 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
             Text(
               'Description',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             SizedBox(height: 8),
             Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Text(
@@ -892,12 +909,13 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
             Text(
               'Herbal Preparation',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             SizedBox(height: 8),
             Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -909,9 +927,10 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
                         SizedBox(width: 8),
                         Text(
                           'How to Prepare',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ],
                     ),
@@ -930,7 +949,8 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.warning, color: Colors.orange[600], size: 20),
+                          Icon(Icons.warning,
+                              color: Colors.orange[600], size: 20),
                           SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -955,12 +975,13 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
               Text(
                 'Your Notes',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               SizedBox(height: 8),
               Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: Padding(
                   padding: EdgeInsets.all(16),
                   child: Text(
@@ -977,12 +998,13 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
             Text(
               'Help Improve Accuracy',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             SizedBox(height: 8),
             Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -991,8 +1013,8 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
                     Text(
                       'Is this identification correct? Your feedback helps the AI learn.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                            color: Colors.grey[600],
+                          ),
                     ),
                     SizedBox(height: 16),
                     TextField(

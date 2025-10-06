@@ -18,7 +18,8 @@ class CameraScreen extends StatefulWidget {
   _CameraScreenState createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
+class _CameraScreenState extends State<CameraScreen>
+    with WidgetsBindingObserver {
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
   bool _isFlashOn = false;
@@ -66,7 +67,8 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Camera Permission Required'),
-        content: const Text('This app needs camera access to identify plants. Please grant camera permission in settings.'),
+        content: const Text(
+            'This app needs camera access to identify plants. Please grant camera permission in settings.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -88,7 +90,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     if (widget.cameras.isEmpty) return;
 
     final camera = _isRearCamera ? widget.cameras.first : widget.cameras.last;
-    
+
     _cameraController = CameraController(
       camera,
       ResolutionPreset.high,
@@ -119,7 +121,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     try {
       final XFile image = await _cameraController!.takePicture();
       final File imageFile = File(image.path);
-      
+
       setState(() {
         _capturedImages.add(imageFile);
         _isCapturing = false;
@@ -129,7 +131,8 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Photo captured! ${_capturedImages.length} image(s) taken'),
+            content: Text(
+                'Photo captured! ${_capturedImages.length} image(s) taken'),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -149,7 +152,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       setState(() {
         _isFlashOn = !_isFlashOn;
       });
-      
+
       await _cameraController!.setFlashMode(
         _isFlashOn ? FlashMode.torch : FlashMode.off,
       );
@@ -214,7 +217,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           Positioned.fill(
             child: CameraPreview(_cameraController!),
           ),
-          
+
           // Top Controls
           Positioned(
             top: MediaQuery.of(context).padding.top,
@@ -237,7 +240,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                       child: const Icon(Icons.arrow_back, color: Colors.white),
                     ),
                   ),
-                  
+
                   // Flash Button
                   GestureDetector(
                     onTap: _toggleFlash,
@@ -253,7 +256,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                       ),
                     ),
                   ),
-                  
+
                   // Camera Switch Button
                   if (widget.cameras.length > 1)
                     GestureDetector(
@@ -264,21 +267,23 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                           color: Colors.black45,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.flip_camera_ios, color: Colors.white),
+                        child: const Icon(Icons.flip_camera_ios,
+                            color: Colors.white),
                       ),
                     ),
                 ],
               ),
             ),
           ),
-          
+
           // Captured Images Counter
           if (_capturedImages.isNotEmpty)
             Positioned(
               top: MediaQuery.of(context).padding.top + 60,
               left: 20,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.green,
                   borderRadius: BorderRadius.circular(20),
@@ -289,7 +294,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                 ),
               ),
             ),
-          
+
           // Bottom Controls
           Positioned(
             bottom: 0,
@@ -353,7 +358,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                     ),
                     const SizedBox(height: 20),
                   ],
-                  
+
                   // Control Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -367,10 +372,11 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                             color: Colors.black45,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.photo_library, color: Colors.white, size: 30),
+                          child: const Icon(Icons.photo_library,
+                              color: Colors.white, size: 30),
                         ),
                       ),
-                      
+
                       // Capture Button
                       GestureDetector(
                         onTap: _captureImage,
@@ -389,19 +395,23 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                               shape: BoxShape.circle,
                             ),
                             child: _isCapturing
-                                ? const Icon(Icons.stop, color: Colors.white, size: 30)
+                                ? const Icon(Icons.stop,
+                                    color: Colors.white, size: 30)
                                 : null,
                           ),
                         ),
                       ),
-                      
+
                       // Done Button
                       GestureDetector(
-                        onTap: _capturedImages.isNotEmpty ? _finishCapture : null,
+                        onTap:
+                            _capturedImages.isNotEmpty ? _finishCapture : null,
                         child: Container(
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
-                            color: _capturedImages.isNotEmpty ? Colors.green : Colors.black45,
+                            color: _capturedImages.isNotEmpty
+                                ? Colors.green
+                                : Colors.black45,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -413,12 +423,12 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 10),
-                  
+
                   // Instructions
                   Text(
-                    _capturedImages.isEmpty 
+                    _capturedImages.isEmpty
                         ? 'Capture multiple angles of the plant'
                         : 'Tap ✓ to identify or capture more photos',
                     style: const TextStyle(
@@ -431,7 +441,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               ),
             ),
           ),
-          
+
           // Focus indicator
           if (_isCapturing)
             Center(
