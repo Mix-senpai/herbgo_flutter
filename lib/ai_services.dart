@@ -13,14 +13,53 @@ class PlantAIService {
     _model = GenerativeModel(model: 'gemini-2.0-flash-lite', apiKey: _apiKey);
   }
 
+  /// First checks the gallery (local knowledge), then queries Gemini if not found
   Future<PlantData?> identifyPlant(
     List<File> images,
     String? userNotes,
     LearningData learningData,
   ) async {
     try {
-      // Prepare context from learning data
-      String learningContext = _buildLearningContext(learningData);
+      // Step 1: Check if this plant exists in our gallery (local knowledge base)
+      PlantData? knownPlant = await _checkAgainstGallery(images, learningData);
+
+      if (knownPlant != null) {
+        print('Plant found in gallery: ${knownPlant.commonName}');
+        // Return a new instance with updated images and notes
+        return PlantData(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          commonName: knownPlant.commonName,
+          scientificName: knownPlant.scientificName,
+          description: knownPlant.description,
+          preparation: knownPlant.preparation,
+          isHerbal: knownPlant.isHerbal,
+          imagePaths: images.map((f) => f.path).toList(),
+          identifiedAt: DateTime.now(),
+          userNotes: userNotes,
+        );
+      }
+
+      // Step 2: Plant not in gallery, query Gemini
+      print('Plant not in gallery, querying Gemini...');
+      return await _queryGeminiForPlant(images, userNotes, learningData);
+    } catch (e) {
+      print('Error identifying plant: $e');
+    }
+    return null;
+  }
+
+  /// Check if the plant exists in the gallery by asking Gemini to compare
+  Future<PlantData?> _checkAgainstGallery(
+    List<File> images,
+    LearningData learningData,
+  ) async {
+    if (learningData.identifiedPlants.isEmpty) {
+      return null; // No plants in gallery yet
+    }
+
+    try {
+      // Build a concise list of plants in the gallery
+      String galleryContext = _buildGalleryContext(learningData);
 
       // Convert images to bytes
       List<DataPart> imageParts = [];
@@ -30,8 +69,69 @@ class PlantAIService {
       }
 
       String prompt = '''
-$learningContext
+You are comparing a plant in these images against a gallery of known plants.
 
+GALLERY OF KNOWN PLANTS:
+$galleryContext
+
+Task: Determine if the plant in the images matches ANY plant in the gallery above.
+
+Respond in JSON format:
+{
+  "matchFound": true/false,
+  "matchedPlantId": "id of matched plant or null",
+  "confidence": 0.0-1.0,
+  "reasoning": "brief explanation"
+}
+
+Be conservative - only return matchFound: true if you're confident (>0.6) it's the same species.
+Consider leaf shape, arrangement, stem characteristics, flowers, and overall morphology.
+''';
+
+      final content = [
+        Content.multi([TextPart(prompt), ...imageParts]),
+      ];
+
+      final response = await _model.generateContent(content);
+
+      if (response.text != null) {
+        String jsonString = _extractJsonFromResponse(response.text!);
+        Map<String, dynamic> result = jsonDecode(jsonString);
+
+        if (result['matchFound'] == true && result['confidence'] >= 0.6) {
+          // Find the matched plant
+          String matchedId = result['matchedPlantId'];
+          PlantData? matchedPlant = learningData.identifiedPlants.firstWhere(
+              (p) => p.id == matchedId,
+              orElse: () => null as PlantData);
+
+          if (matchedPlant != null) {
+            return matchedPlant;
+          }
+        }
+      }
+    } catch (e) {
+      print('Error checking gallery: $e');
+    }
+
+    return null;
+  }
+
+  /// Query Gemini for a new plant identification
+  Future<PlantData?> _queryGeminiForPlant(
+    List<File> images,
+    String? userNotes,
+    LearningData learningData,
+  ) async {
+    try {
+      // Convert images to bytes
+      List<DataPart> imageParts = [];
+      for (File image in images) {
+        Uint8List imageBytes = await image.readAsBytes();
+        imageParts.add(DataPart('image/jpeg', imageBytes));
+      }
+
+      String prompt = '''
 Analyze the provided plant images and determine if this is a herbal plant with medicinal properties.
 
 User notes: ${userNotes ?? 'None provided'}
@@ -39,7 +139,7 @@ User notes: ${userNotes ?? 'None provided'}
 Please respond in the following JSON format:
 {
   "isHerbal": true/false,
-  "commonName": "Common name of the plant",
+  "commonName": "Most common Filipino name of the plant",
   "scientificName": "Scientific name (Genus species)",
   "description": "Brief description of the plant and its characteristics",
   "preparation": "How to prepare this plant for herbal use on a step by step basis (if herbal), or 'Not applicable' if non-herbal",
@@ -62,13 +162,12 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
       final response = await _model.generateContent(content);
 
       if (response.text != null) {
-        // Extract JSON from response
         String jsonString = _extractJsonFromResponse(response.text!);
         Map<String, dynamic> plantInfo = jsonDecode(jsonString);
 
         // Only proceed if confidence is reasonable
         if (plantInfo['confidence'] < 0.6) {
-          return null; // Low confidence, don't identify
+          return null;
         }
 
         return PlantData(
@@ -84,36 +183,28 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
         );
       }
     } catch (e) {
-      print('Error identifying plant: $e');
+      print('Error querying Gemini: $e');
     }
     return null;
   }
 
-  String _buildLearningContext(LearningData learningData) {
+  String _buildGalleryContext(LearningData learningData) {
     StringBuffer context = StringBuffer();
-    context.writeln('Learning Context from Previous Identifications:');
 
-    if (learningData.identifiedPlants.isNotEmpty) {
-      context.writeln('Previously identified plants:');
-      for (var plant in learningData.identifiedPlants.take(10)) {
-        context.writeln(
-          '- ${plant.commonName} (${plant.scientificName}): ${plant.isHerbal ? 'Herbal' : 'Non-herbal'}',
-        );
-      }
-    }
-
-    if (learningData.userCorrections.isNotEmpty) {
-      context.writeln('User corrections to consider:');
-      learningData.userCorrections.forEach((plant, corrections) {
-        context.writeln('- $plant: ${corrections.join(', ')}');
-      });
+    for (var plant in learningData.identifiedPlants) {
+      context.writeln('ID: ${plant.id}');
+      context.writeln('Common Name: ${plant.commonName}');
+      context.writeln('Scientific Name: ${plant.scientificName}');
+      context.writeln('Type: ${plant.isHerbal ? 'Herbal' : 'Non-herbal'}');
+      context.writeln(
+          'Description: ${plant.description.substring(0, plant.description.length > 150 ? 150 : plant.description.length)}...');
+      context.writeln('---');
     }
 
     return context.toString();
   }
 
   String _extractJsonFromResponse(String response) {
-    // Find JSON in the response
     int startIndex = response.indexOf('{');
     int endIndex = response.lastIndexOf('}');
 
@@ -122,5 +213,28 @@ Be conservative - if uncertain about herbal properties or safety, mark as non-he
     }
 
     throw Exception('No valid JSON found in response');
+  }
+
+  /// Update an existing plant's information
+  Future<PlantData?> updatePlant(
+    PlantData existingPlant,
+    List<File> newImages,
+    String? newNotes,
+    String? updatedDescription,
+    String? updatedPreparation,
+  ) async {
+    return PlantData(
+      id: existingPlant.id, // Keep same ID
+      commonName: existingPlant.commonName,
+      scientificName: existingPlant.scientificName,
+      description: updatedDescription ?? existingPlant.description,
+      preparation: updatedPreparation ?? existingPlant.preparation,
+      isHerbal: existingPlant.isHerbal,
+      imagePaths: newImages.isNotEmpty
+          ? newImages.map((f) => f.path).toList()
+          : existingPlant.imagePaths,
+      identifiedAt: DateTime.now(),
+      userNotes: newNotes ?? existingPlant.userNotes,
+    );
   }
 }

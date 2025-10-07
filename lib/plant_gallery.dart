@@ -13,7 +13,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
   List<PlantData> _allPlants = [];
   List<PlantData> _filteredPlants = [];
   String _searchQuery = '';
-  String _filterType = 'all'; // 'all', 'herbal', 'non-herbal'
+  String _filterType = 'all';
   bool _isLoading = true;
 
   @override
@@ -29,8 +29,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
 
     try {
       LearningData learningData = await _dataManager.loadLearningData();
-      _allPlants =
-          learningData.identifiedPlants.reversed.toList(); // Most recent first
+      _allPlants = learningData.identifiedPlants.reversed.toList();
       _applyFilters();
     } catch (e) {
       print('Error loading plants: $e');
@@ -43,14 +42,12 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
 
   void _applyFilters() {
     _filteredPlants = _allPlants.where((plant) {
-      // Search filter
       bool matchesSearch = _searchQuery.isEmpty ||
           plant.commonName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           plant.scientificName
               .toLowerCase()
               .contains(_searchQuery.toLowerCase());
 
-      // Type filter
       bool matchesType = _filterType == 'all' ||
           (_filterType == 'herbal' && plant.isHerbal) ||
           (_filterType == 'non-herbal' && !plant.isHerbal);
@@ -87,8 +84,37 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
               Expanded(child: Text('Delete Plant')),
             ],
           ),
-          content: Text(
-            'Are you sure you want to delete "${plant.commonName}" from your collection? This will also remove all associated images.',
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete "${plant.commonName}" from your collection?',
+                style: TextStyle(fontSize: 15),
+              ),
+              SizedBox(height: 12),
+              Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  border: Border.all(color: Colors.orange[300]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange[700], size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This will remove the plant from the AI\'s knowledge base.',
+                        style:
+                            TextStyle(fontSize: 12, color: Colors.orange[900]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -108,44 +134,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
     if (confirmDelete == true) {
       try {
         LearningData learningData = await _dataManager.loadLearningData();
-
-        // Remove plant from the database
-        learningData.identifiedPlants.removeWhere((p) => p.id == plant.id);
-
-        // Update frequency map - decrement the count for this species
-        String plantKey = '${plant.commonName}_${plant.scientificName}';
-        if (learningData.plantFrequency.containsKey(plantKey)) {
-          if (learningData.plantFrequency[plantKey]! <= 1) {
-            // This was the last plant of this species, remove the entry entirely
-            learningData.plantFrequency.remove(plantKey);
-            print('Removed species entirely from frequency map: $plantKey');
-          } else {
-            // Decrement the count as there are other plants of this species
-            learningData.plantFrequency[plantKey] =
-                learningData.plantFrequency[plantKey]! - 1;
-            print(
-                'Decremented frequency count for $plantKey to ${learningData.plantFrequency[plantKey]}');
-          }
-        } else {
-          print('Warning: Plant key $plantKey not found in frequency map');
-        }
-
-        // DELETE THE PHYSICAL IMAGE FILES - ADD THIS SECTION
-        for (String imagePath in plant.imagePaths) {
-          try {
-            File imageFile = File(imagePath);
-            if (await imageFile.exists()) {
-              await imageFile.delete();
-              print('Deleted image file: $imagePath');
-            }
-          } catch (e) {
-            print('Error deleting image file $imagePath: $e');
-            // Continue with other files even if one fails
-          }
-        }
-
-        // Save the updated learning data
-        await _dataManager.saveLearningData(learningData);
+        await _dataManager.deletePlant(plant.id, learningData);
         await _loadPlants();
 
         if (mounted) {
@@ -155,7 +144,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                 children: [
                   Icon(Icons.check, color: Colors.white),
                   SizedBox(width: 8),
-                  Text('Plant and images deleted successfully'),
+                  Text('Plant deleted from knowledge base'),
                 ],
               ),
               backgroundColor: Colors.green[600],
@@ -207,7 +196,6 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
       ),
       body: Column(
         children: [
-          // Search and Filter Section
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -223,7 +211,6 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
             ),
             child: Column(
               children: [
-                // Search Bar
                 TextField(
                   decoration: InputDecoration(
                     hintText: 'Search plants...',
@@ -240,8 +227,6 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                   onChanged: _onSearchChanged,
                 ),
                 SizedBox(height: 12),
-
-                // Filter Chips
                 Row(
                   children: [
                     Text(
@@ -269,8 +254,6 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
               ],
             ),
           ),
-
-          // Results Summary
           if (!_isLoading)
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -279,7 +262,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                 children: [
                   Flexible(
                     child: Text(
-                      '${_filteredPlants.length} plant${_filteredPlants.length != 1 ? 's' : ''} found',
+                      '${_filteredPlants.length} plant${_filteredPlants.length != 1 ? 's' : ''} in knowledge base',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontWeight: FontWeight.w500,
@@ -297,8 +280,6 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                 ],
               ),
             ),
-
-          // Plant Grid
           Expanded(
             child: _isLoading
                 ? Center(
@@ -308,7 +289,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                         CircularProgressIndicator(color: Colors.green[600]),
                         SizedBox(height: 16),
                         Text(
-                          'Loading your plant collection...',
+                          'Loading knowledge base...',
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                       ],
@@ -326,8 +307,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                             crossAxisCount: 2,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            childAspectRatio:
-                                0.75, // Adjusted to prevent overflow
+                            childAspectRatio: 0.75,
                           ),
                           itemCount: _filteredPlants.length,
                           itemBuilder: (context, index) {
@@ -392,7 +372,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
               _searchQuery.isNotEmpty
                   ? 'No plants match your search'
                   : _allPlants.isEmpty
-                      ? 'No plants identified yet'
+                      ? 'Knowledge base is empty'
                       : 'No plants match the selected filter',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.grey[600],
@@ -403,10 +383,10 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
             SizedBox(height: 12),
             Text(
               _searchQuery.isNotEmpty
-                  ? 'Try adjusting your search terms or filters'
+                  ? 'Try adjusting your search terms'
                   : _allPlants.isEmpty
-                      ? 'Start identifying plants to build your collection!'
-                      : 'Try changing the filter or search terms',
+                      ? 'Start identifying plants to build the knowledge base'
+                      : 'Try changing the filter',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[500],
                   ),
@@ -443,7 +423,6 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Plant Image
             Expanded(
               flex: 3,
               child: Stack(
@@ -481,8 +460,6 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                             ),
                           ),
                   ),
-
-                  // Herbal Badge
                   if (plant.isHerbal)
                     Positioned(
                       top: 8,
@@ -511,8 +488,6 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                         ),
                       ),
                     ),
-
-                  // Multiple Images Indicator
                   if (plant.imagePaths.length > 1)
                     Positioned(
                       top: 8,
@@ -542,8 +517,6 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                         ),
                       ),
                     ),
-
-                  // Delete Button
                   Positioned(
                     bottom: 6,
                     right: 6,
@@ -566,10 +539,8 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                 ],
               ),
             ),
-
-            // Plant Info - Fixed height to prevent overflow
             Container(
-              height: 70, // Fixed height to prevent overflow
+              height: 70,
               padding: EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,8 +618,8 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
   }
 }
 
-// Plant Details Screen
-class PlantDetailsScreen extends StatelessWidget {
+// Plant Details Screen with Edit/Update options
+class PlantDetailsScreen extends StatefulWidget {
   final PlantData plant;
   final VoidCallback onPlantUpdated;
 
@@ -659,26 +630,131 @@ class PlantDetailsScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _PlantDetailsScreenState createState() => _PlantDetailsScreenState();
+}
+
+class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
+  final DataManager _dataManager = DataManager();
+  bool _isEditing = false;
+  late TextEditingController _descriptionController;
+  late TextEditingController _preparationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController =
+        TextEditingController(text: widget.plant.description);
+    _preparationController =
+        TextEditingController(text: widget.plant.preparation);
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _preparationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveChanges() async {
+    try {
+      LearningData learningData = await _dataManager.loadLearningData();
+
+      PlantData updatedPlant = PlantData(
+        id: widget.plant.id,
+        commonName: widget.plant.commonName,
+        scientificName: widget.plant.scientificName,
+        description: _descriptionController.text,
+        preparation: _preparationController.text,
+        isHerbal: widget.plant.isHerbal,
+        imagePaths: widget.plant.imagePaths,
+        identifiedAt: DateTime.now(),
+        userNotes: widget.plant.userNotes,
+      );
+
+      await _dataManager.updatePlantIdentification(updatedPlant, learningData);
+
+      setState(() {
+        _isEditing = false;
+      });
+
+      widget.onPlantUpdated();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Plant information updated'),
+            ],
+          ),
+          backgroundColor: Colors.green[600],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating plant: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Plant Details'),
         backgroundColor: Colors.green[700],
         elevation: 0,
+        actions: [
+          if (!_isEditing)
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                setState(() {
+                  _isEditing = true;
+                });
+              },
+              tooltip: 'Edit Plant Info',
+            )
+          else
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      _isEditing = false;
+                      _descriptionController.text = widget.plant.description;
+                      _preparationController.text = widget.plant.preparation;
+                    });
+                  },
+                  tooltip: 'Cancel',
+                ),
+                IconButton(
+                  icon: Icon(Icons.check),
+                  onPressed: _saveChanges,
+                  tooltip: 'Save Changes',
+                ),
+              ],
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hero Image Section
             Container(
               height: 250,
-              child: plant.imagePaths.isNotEmpty
+              child: widget.plant.imagePaths.isNotEmpty
                   ? PageView.builder(
-                      itemCount: plant.imagePaths.length,
+                      itemCount: widget.plant.imagePaths.length,
                       itemBuilder: (context, index) {
                         return Image.file(
-                          File(plant.imagePaths[index]),
+                          File(widget.plant.imagePaths[index]),
                           width: double.infinity,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
@@ -703,13 +779,11 @@ class PlantDetailsScreen extends StatelessWidget {
                       ),
                     ),
             ),
-
             Padding(
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Plant Name Header
                   Row(
                     children: [
                       Expanded(
@@ -717,7 +791,7 @@ class PlantDetailsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              plant.commonName,
+                              widget.plant.commonName,
                               style: Theme.of(context)
                                   .textTheme
                                   .headlineSmall
@@ -728,7 +802,7 @@ class PlantDetailsScreen extends StatelessWidget {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              plant.scientificName,
+                              widget.plant.scientificName,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyLarge
@@ -744,12 +818,12 @@ class PlantDetailsScreen extends StatelessWidget {
                         padding:
                             EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: plant.isHerbal
+                          color: widget.plant.isHerbal
                               ? Colors.green[100]
                               : Colors.grey[100],
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: plant.isHerbal
+                            color: widget.plant.isHerbal
                                 ? Colors.green[300]!
                                 : Colors.grey[300]!,
                           ),
@@ -758,19 +832,19 @@ class PlantDetailsScreen extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              plant.isHerbal
+                              widget.plant.isHerbal
                                   ? Icons.healing
                                   : Icons.info_outline,
                               size: 16,
-                              color: plant.isHerbal
+                              color: widget.plant.isHerbal
                                   ? Colors.green[700]
                                   : Colors.grey[700],
                             ),
                             SizedBox(width: 6),
                             Text(
-                              plant.isHerbal ? 'Herbal' : 'Non-Herbal',
+                              widget.plant.isHerbal ? 'Herbal' : 'Non-Herbal',
                               style: TextStyle(
-                                color: plant.isHerbal
+                                color: widget.plant.isHerbal
                                     ? Colors.green[700]
                                     : Colors.grey[700],
                                 fontWeight: FontWeight.w600,
@@ -782,39 +856,34 @@ class PlantDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   SizedBox(height: 24),
-
-                  // Description
-                  _buildSection(
+                  _buildEditableSection(
                     context,
                     'Description',
-                    plant.description,
+                    _descriptionController,
                     Icons.description,
+                    maxLines: 5,
                   ),
-
-                  if (plant.isHerbal) ...[
+                  if (widget.plant.isHerbal) ...[
                     SizedBox(height: 20),
-                    _buildSection(
+                    _buildEditableSection(
                       context,
                       'Herbal Preparation',
-                      plant.preparation,
+                      _preparationController,
                       Icons.healing,
                       showWarning: true,
+                      maxLines: 8,
                     ),
                   ],
-
-                  if (plant.userNotes != null) ...[
+                  if (widget.plant.userNotes != null) ...[
                     SizedBox(height: 20),
                     _buildSection(
                       context,
                       'Your Notes',
-                      plant.userNotes!,
+                      widget.plant.userNotes!,
                       Icons.note,
                     ),
                   ],
-
-                  SizedBox(height: 20),
                   SizedBox(height: 32),
                 ],
               ),
@@ -825,12 +894,13 @@ class PlantDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(
+  Widget _buildEditableSection(
     BuildContext context,
     String title,
-    String content,
+    TextEditingController controller,
     IconData icon, {
     bool showWarning = false,
+    int maxLines = 3,
   }) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -853,14 +923,28 @@ class PlantDetailsScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 12),
-            Text(
-              content,
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.5,
-                color: Colors.grey[700],
-              ),
-            ),
+            _isEditing
+                ? TextField(
+                    controller: controller,
+                    maxLines: maxLines,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.green[600]!),
+                      ),
+                    ),
+                  )
+                : Text(
+                    controller.text,
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.5,
+                      color: Colors.grey[700],
+                    ),
+                  ),
             if (showWarning) ...[
               SizedBox(height: 16),
               Container(
@@ -893,34 +977,44 @@ class PlantDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
+  Widget _buildSection(
+    BuildContext context,
+    String title,
+    String content,
+    IconData icon,
+  ) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Colors.green[600]),
+                SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            Text(
+              content,
               style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
+                fontSize: 15,
+                height: 1.5,
+                color: Colors.grey[700],
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(color: Colors.grey[800]),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-  }
-
-  String _formatDateTime(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

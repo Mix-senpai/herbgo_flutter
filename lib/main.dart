@@ -378,7 +378,10 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Herbal Plant Identifier'),
+        title: Text(
+          'Herbal Plant Identifier',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.green[700],
         elevation: 0,
         actions: [
@@ -991,89 +994,6 @@ class _PlantInfoCardState extends State<PlantInfoCard> {
                 ),
               ),
             ],
-
-            SizedBox(height: 20),
-
-            // Feedback Section
-            Text(
-              'Help Improve Accuracy',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            SizedBox(height: 8),
-            Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Is this identification correct? Your feedback helps the AI learn.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                    ),
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: _correctionController,
-                      decoration: InputDecoration(
-                        labelText: 'Corrections or Additional Info',
-                        hintText:
-                            'e.g., "This is actually..." or "Also known as..."',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.blue[600]!),
-                        ),
-                      ),
-                      maxLines: 3,
-                      textCapitalization: TextCapitalization.sentences,
-                    ),
-                    SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        if (_correctionController.text.isNotEmpty) {
-                          widget.onCorrection(_correctionController.text);
-                          _correctionController.clear();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                children: [
-                                  Icon(Icons.check, color: Colors.white),
-                                  SizedBox(width: 8),
-                                  Text('Feedback submitted! Thank you.'),
-                                ],
-                              ),
-                              backgroundColor: Colors.green[600],
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                      icon: Icon(Icons.feedback),
-                      label: Text('Submit Feedback'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[600],
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            SizedBox(height: 20),
           ],
         ),
       ),
