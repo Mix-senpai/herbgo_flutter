@@ -105,9 +105,7 @@ Consider leaf shape, arrangement, stem characteristics, flowers, and overall mor
               (p) => p.id == matchedId,
               orElse: () => null as PlantData);
 
-          if (matchedPlant != null) {
-            return matchedPlant;
-          }
+          return matchedPlant;
         }
       }
     } catch (e) {

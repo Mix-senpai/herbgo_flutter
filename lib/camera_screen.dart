@@ -9,10 +9,10 @@ class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
 
   const CameraScreen({
-    Key? key,
+    super.key,
     required this.onImagesCapture,
     required this.cameras,
-  }) : super(key: key);
+  });
 
   @override
   _CameraScreenState createState() => _CameraScreenState();
@@ -24,7 +24,7 @@ class _CameraScreenState extends State<CameraScreen>
   bool _isCameraInitialized = false;
   bool _isFlashOn = false;
   bool _isRearCamera = true;
-  List<File> _capturedImages = [];
+  final List<File> _capturedImages = [];
   bool _isCapturing = false;
 
   @override

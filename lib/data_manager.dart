@@ -147,39 +147,37 @@ class DataManager {
       orElse: () => null as PlantData,
     );
 
-    if (plant != null) {
-      // Remove from list
-      currentData.identifiedPlants.removeWhere((p) => p.id == plantId);
+    // Remove from list
+    currentData.identifiedPlants.removeWhere((p) => p.id == plantId);
 
-      // Update frequency
-      String plantKey = '${plant.commonName}_${plant.scientificName}';
-      if (currentData.plantFrequency.containsKey(plantKey)) {
-        if (currentData.plantFrequency[plantKey]! <= 1) {
-          currentData.plantFrequency.remove(plantKey);
-        } else {
-          currentData.plantFrequency[plantKey] =
-              currentData.plantFrequency[plantKey]! - 1;
-        }
+    // Update frequency
+    String plantKey = '${plant.commonName}_${plant.scientificName}';
+    if (currentData.plantFrequency.containsKey(plantKey)) {
+      if (currentData.plantFrequency[plantKey]! <= 1) {
+        currentData.plantFrequency.remove(plantKey);
+      } else {
+        currentData.plantFrequency[plantKey] =
+            currentData.plantFrequency[plantKey]! - 1;
       }
-
-      // Delete image files
-      for (String imagePath in plant.imagePaths) {
-        try {
-          File imageFile = File(imagePath);
-          if (await imageFile.exists()) {
-            await imageFile.delete();
-          }
-        } catch (e) {
-          print('Error deleting image: $e');
-        }
-      }
-
-      // Remove corrections related to this plant
-      currentData.userCorrections.remove(plantId);
-
-      await saveLearningData(currentData);
-      print('Plant deleted from knowledge base: ${plant.commonName}');
     }
+
+    // Delete image files
+    for (String imagePath in plant.imagePaths) {
+      try {
+        File imageFile = File(imagePath);
+        if (await imageFile.exists()) {
+          await imageFile.delete();
+        }
+      } catch (e) {
+        print('Error deleting image: $e');
+      }
+    }
+
+    // Remove corrections related to this plant
+    currentData.userCorrections.remove(plantId);
+
+    await saveLearningData(currentData);
+    print('Plant deleted from knowledge base: ${plant.commonName}');
   }
 
   Future<void> addUserCorrection(

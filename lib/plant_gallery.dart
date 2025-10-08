@@ -4,6 +4,8 @@ import 'package:herbgo/data_manager.dart';
 import 'dart:io';
 
 class PlantGalleryScreen extends StatefulWidget {
+  const PlantGalleryScreen({super.key});
+
   @override
   _PlantGalleryScreenState createState() => _PlantGalleryScreenState();
 }
@@ -77,7 +79,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
         return AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          title: Row(
+          title: const Row(
             children: [
               Icon(Icons.delete_outline, color: Colors.red),
               SizedBox(width: 8),
@@ -90,11 +92,11 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
             children: [
               Text(
                 'Are you sure you want to delete "${plant.commonName}" from your collection?',
-                style: TextStyle(fontSize: 15),
+                style: const TextStyle(fontSize: 15),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Container(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.orange[50],
                   border: Border.all(color: Colors.orange[300]!),
@@ -103,7 +105,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.warning, color: Colors.orange[700], size: 20),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'This will remove the plant from the AI\'s knowledge base.',
@@ -119,12 +121,12 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: Text('Delete'),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -140,7 +142,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Row(
+              content: const Row(
                 children: [
                   Icon(Icons.check, color: Colors.white),
                   SizedBox(width: 8),
@@ -184,12 +186,12 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Plant Gallery'),
+        title: const Text('Plant Gallery'),
         backgroundColor: Colors.green[700],
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh),
             onPressed: _loadPlants,
           ),
         ],
@@ -197,7 +199,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
       body: Column(
         children: [
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.green[50],
               boxShadow: [
@@ -205,7 +207,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                   color: Colors.grey.withOpacity(0.1),
                   spreadRadius: 1,
                   blurRadius: 3,
-                  offset: Offset(0, 1),
+                  offset: const Offset(0, 1),
                 ),
               ],
             ),
@@ -221,12 +223,12 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 16),
                   ),
                   onChanged: _onSearchChanged,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Text(
@@ -234,16 +236,16 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                       style: TextStyle(
                           fontWeight: FontWeight.w600, color: Colors.grey[700]),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
                           children: [
                             _buildFilterChip('All', 'all'),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             _buildFilterChip('Herbal', 'herbal'),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             _buildFilterChip('Non-Herbal', 'non-herbal'),
                           ],
                         ),
@@ -256,7 +258,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
           ),
           if (!_isLoading)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -287,7 +289,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(color: Colors.green[600]),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
                           'Loading knowledge base...',
                           style: TextStyle(color: Colors.grey[600]),
@@ -301,9 +303,9 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                         onRefresh: _loadPlants,
                         color: Colors.green[600],
                         child: GridView.builder(
-                          padding: EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(16),
                           gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
@@ -351,12 +353,12 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 shape: BoxShape.circle,
@@ -367,7 +369,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                 color: Colors.grey[400],
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             Text(
               _searchQuery.isNotEmpty
                   ? 'No plants match your search'
@@ -380,7 +382,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                   ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               _searchQuery.isNotEmpty
                   ? 'Try adjusting your search terms'
@@ -393,15 +395,16 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
               textAlign: TextAlign.center,
             ),
             if (_allPlants.isEmpty) ...[
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.add_a_photo),
-                label: Text('Start Identifying Plants'),
+                icon: const Icon(Icons.add_a_photo),
+                label: const Text('Start Identifying Plants'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[600],
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
@@ -429,7 +432,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                 children: [
                   ClipRRect(
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(12)),
+                        const BorderRadius.vertical(top: Radius.circular(12)),
                     child: plant.imagePaths.isNotEmpty
                         ? Image.file(
                             File(plant.imagePaths.first),
@@ -465,13 +468,13 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.green[600],
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.healing, color: Colors.white, size: 10),
@@ -493,8 +496,8 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.black54,
                           borderRadius: BorderRadius.circular(8),
@@ -502,12 +505,12 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.photo_library,
+                            const Icon(Icons.photo_library,
                                 color: Colors.white, size: 9),
-                            SizedBox(width: 2),
+                            const SizedBox(width: 2),
                             Text(
                               '${plant.imagePaths.length}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
@@ -523,12 +526,12 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                     child: GestureDetector(
                       onTap: () => _deletePlant(plant),
                       child: Container(
-                        padding: EdgeInsets.all(5),
+                        padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
                           color: Colors.red[600],
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.delete,
                           color: Colors.white,
                           size: 12,
@@ -541,7 +544,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
             ),
             Container(
               height: 70,
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -560,7 +563,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           plant.scientificName,
                           style: TextStyle(
@@ -578,7 +581,7 @@ class _PlantGalleryScreenState extends State<PlantGalleryScreen> {
                     children: [
                       Icon(Icons.calendar_today,
                           size: 10, color: Colors.grey[500]),
-                      SizedBox(width: 3),
+                      const SizedBox(width: 3),
                       Expanded(
                         child: Text(
                           _formatDate(plant.identifiedAt),
@@ -624,10 +627,10 @@ class PlantDetailsScreen extends StatefulWidget {
   final VoidCallback onPlantUpdated;
 
   const PlantDetailsScreen({
-    Key? key,
+    super.key,
     required this.plant,
     required this.onPlantUpdated,
-  }) : super(key: key);
+  });
 
   @override
   _PlantDetailsScreenState createState() => _PlantDetailsScreenState();
@@ -681,7 +684,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(
+          content: const Row(
             children: [
               Icon(Icons.check, color: Colors.white),
               SizedBox(width: 8),
@@ -706,13 +709,13 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Plant Details'),
+        title: const Text('Plant Details'),
         backgroundColor: Colors.green[700],
         elevation: 0,
         actions: [
           if (!_isEditing)
             IconButton(
-              icon: Icon(Icons.edit),
+              icon: const Icon(Icons.edit),
               onPressed: () {
                 setState(() {
                   _isEditing = true;
@@ -724,7 +727,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
             Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                   onPressed: () {
                     setState(() {
                       _isEditing = false;
@@ -735,7 +738,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                   tooltip: 'Cancel',
                 ),
                 IconButton(
-                  icon: Icon(Icons.check),
+                  icon: const Icon(Icons.check),
                   onPressed: _saveChanges,
                   tooltip: 'Save Changes',
                 ),
@@ -747,7 +750,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
+            SizedBox(
               height: 250,
               child: widget.plant.imagePaths.isNotEmpty
                   ? PageView.builder(
@@ -780,7 +783,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                     ),
             ),
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -800,7 +803,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                                     color: Colors.green[800],
                                   ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               widget.plant.scientificName,
                               style: Theme.of(context)
@@ -815,8 +818,8 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                         ),
                       ),
                       Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: widget.plant.isHerbal
                               ? Colors.green[100]
@@ -840,7 +843,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                                   ? Colors.green[700]
                                   : Colors.grey[700],
                             ),
-                            SizedBox(width: 6),
+                            const SizedBox(width: 6),
                             Text(
                               widget.plant.isHerbal ? 'Herbal' : 'Non-Herbal',
                               style: TextStyle(
@@ -856,7 +859,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   _buildEditableSection(
                     context,
                     'Description',
@@ -865,7 +868,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                     maxLines: 5,
                   ),
                   if (widget.plant.isHerbal) ...[
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     _buildEditableSection(
                       context,
                       'Herbal Preparation',
@@ -876,7 +879,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                     ),
                   ],
                   if (widget.plant.userNotes != null) ...[
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     _buildSection(
                       context,
                       'Your Notes',
@@ -884,7 +887,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                       Icons.note,
                     ),
                   ],
-                  SizedBox(height: 32),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -905,24 +908,24 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Icon(icon, color: Colors.green[600]),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             _isEditing
                 ? TextField(
                     controller: controller,
@@ -946,9 +949,9 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                     ),
                   ),
             if (showWarning) ...[
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Container(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.orange[50],
                   border: Border.all(color: Colors.orange[300]!),
@@ -957,7 +960,7 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.warning, color: Colors.orange[600], size: 20),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Always consult with healthcare professionals before using any herbal remedies.',
@@ -986,24 +989,24 @@ class _PlantDetailsScreenState extends State<PlantDetailsScreen> {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Icon(icon, color: Colors.green[600]),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               content,
               style: TextStyle(
