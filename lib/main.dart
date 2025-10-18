@@ -62,7 +62,7 @@ class _PlantIdentifierScreenState extends State<PlantIdentifierScreen> {
   @override
   void initState() {
     super.initState();
-    _aiService = PlantAIService("AIzaSyBW3fgT21pjhjoMW6r39Y3Ouv8VFfjzztA");
+    _aiService = PlantAIService("AIzaSyDmKVefbwozFXb3XxVISCrQysGksr5v7kM");
     _loadLearningData();
   }
 
